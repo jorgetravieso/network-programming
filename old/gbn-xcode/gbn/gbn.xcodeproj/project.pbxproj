@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		D3F9FB0319FAF9D5002D22BB /* main.c in Sources */ = {isa = PBXBuildFile; fileRef = D3F9FB0219FAF9D5002D22BB /* main.c */; };
 		D3F9FB0B19FAFA2B002D22BB /* receiver.c in Sources */ = {isa = PBXBuildFile; fileRef = D3F9FB0919FAFA2B002D22BB /* receiver.c */; };
 		D3F9FB0C19FAFA2B002D22BB /* sender.c in Sources */ = {isa = PBXBuildFile; fileRef = D3F9FB0A19FAFA2B002D22BB /* sender.c */; };
 		D3F9FB1119FB4089002D22BB /* cbuffer.c in Sources */ = {isa = PBXBuildFile; fileRef = D3F9FB1019FB4089002D22BB /* cbuffer.c */; };
@@ -27,7 +26,6 @@
 
 /* Begin PBXFileReference section */
 		D3F9FAFF19FAF9D5002D22BB /* gbn */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = gbn; sourceTree = BUILT_PRODUCTS_DIR; };
-		D3F9FB0219FAF9D5002D22BB /* main.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; path = main.c; sourceTree = "<group>"; };
 		D3F9FB0919FAFA2B002D22BB /* receiver.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = receiver.c; sourceTree = "<group>"; };
 		D3F9FB0A19FAFA2B002D22BB /* sender.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; path = sender.c; sourceTree = "<group>"; };
 		D3F9FB0E19FAFAE3002D22BB /* queue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = queue.h; sourceTree = "<group>"; };
@@ -64,7 +62,6 @@
 		D3F9FB0119FAF9D5002D22BB /* gbn */ = {
 			isa = PBXGroup;
 			children = (
-				D3F9FB0219FAF9D5002D22BB /* main.c */,
 				D3F9FB0919FAFA2B002D22BB /* receiver.c */,
 				D3F9FB0A19FAFA2B002D22BB /* sender.c */,
 				D3F9FB1019FB4089002D22BB /* cbuffer.c */,
@@ -132,7 +129,6 @@
 				D3F9FB1119FB4089002D22BB /* cbuffer.c in Sources */,
 				D3F9FB0B19FAFA2B002D22BB /* receiver.c in Sources */,
 				D3F9FB0C19FAFA2B002D22BB /* sender.c in Sources */,
-				D3F9FB0319FAF9D5002D22BB /* main.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

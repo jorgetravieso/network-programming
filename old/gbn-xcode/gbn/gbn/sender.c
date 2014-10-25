@@ -9,10 +9,20 @@
 
 //#define READ_ONLY = "r";
 
+#define WINDOWS_SIZE 100
+#include "cbuffer.c"
 
 
-void syserr(char* msg) { perror(msg); exit(-1); }
 
+int file_size;
+int total_num_of_packets;
+int sq_counter;
+
+
+
+
+void read_packets (FILE * fp, CircularBuffer cb, int from);
+void syserr(char * msg) { perror(msg); exit(-1); }
 
 int main(int argc, char* argv[])
 {
@@ -36,11 +46,19 @@ int main(int argc, char* argv[])
     return 2;
   }
 
-  fp = fopen(argv[3], "r");  //open file
-  if(!fp){
+ // fp = fopen(argv[3], "r");  //open file
+    fp = fopen("/Users/jtraviesor/Desktop/test.in", "r");
+    if(!fp){
     fprintf(stderr, "ERROR: file %s couldn't be opened or not found:\n", argv[3]);
     return 3;
-  } 
+  }
+    
+  fseek(fp, 0L, SEEK_END);  //read file size
+  file_size = ftell(fp);
+  rewind(fp);
+  total_num_of_packets = file_size / PAYLOAD_SIZE;
+  sq_counter = 0;
+
 
   sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);    //create socket
   if(sockfd < 0) syserr("can't open socket");
@@ -51,6 +69,17 @@ int main(int argc, char* argv[])
   serv_addr.sin_port = htons(portno);
 
 
+    
+  CircularBuffer packets;
+  cb_init(packets,WINDOWS_SIZE);
+  read_packets(fp, packets, 0);
+  cb_print(packets);
+    
+    
+    
+    
+    
+  /*
     
     
 
@@ -69,5 +98,31 @@ int main(int argc, char* argv[])
   printf("CLIENT RECEIVED MESSAGE: %s\n", buffer);
 
   close(sockfd);
+   
+  */
+   
   return 0;
 }
+
+void read_packets(FILE *fp, CircularBuffer packets, int from)
+{
+    
+    char buffer[PAYLOAD_SIZE];
+    
+    while(!is_empty(packets))
+    {
+        if(!fread(buffer, sizeof(buffer), 1, fp))
+        {
+            printf("Could not read 1k from file");
+        }
+        Packet p= {sq_counter++,total_num_of_packets,buffer};
+        enqueue(packets,p);
+    }
+    
+    
+}
+
+
+
+
+

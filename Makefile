@@ -1,11 +1,19 @@
-all:	sender receiver
+CC=gcc
+CFLAGS=-c -Wall
+LDFLAGS=
 
-sender: sender.c
-	gcc -Wall $< -o $@
+SRC=sender.c cbuffer.c
+OBJ=$(SRC:.c=.o)
+HDR=cbuffer.h
+EXEC=sender
 
-receiver: receiver.c
-	gcc -Wall $< -o $@
+all: $(SRC) $(EXEC)
+	
+$(EXEC): $(OBJ) 
+		$(CC) $(LDFLAGS) $(OBJ) -o $@
+
+%.o:	%.c $(HDR)
+		$(CC) $(CFLAGS) $< -o $@
 
 clean:
-	rm -f sender receiver *.o *~ core
-
+	rm -f $(OBJ) $(EXEC)

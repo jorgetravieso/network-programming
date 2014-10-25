@@ -86,6 +86,19 @@ Packet dequeue(CircularBuffer cb){
     return p;
 }
 
+void cb_print(CircularBuffer cb)
+{
+    int driver = cb.start;
+    int i = 0;
+    while(i < cb.size){
+        Packet p = cb.elements[driver];
+        driver = (driver + 1) % cb.size;
+        printf("SeqNo: %d, #Packets %d, Payload\n: %s\n\n", p.sqno,p.num_of_packets,p.payload);
+        i++;
+    }
+    
+}
+
 
 
 

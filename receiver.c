@@ -7,17 +7,11 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 
+
+
 void syserr(char *msg) { perror(msg); exit(-1); }
 
-void revert(char* buf)
-{
-  int i = 0, j = strlen(buf)-1;
-  while(i < j) { 
-    char c = buf[j];
-    buf[j--] = buf[i];
-    buf[i++] = c;
-  }
-}
+
 
 int main(int argc, char *argv[])
 {
@@ -54,7 +48,7 @@ for(;;) {
   printf("SERVER GOT MESSAGE: %s from client %s at port %d\n", buffer,
 	 inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port)); 
 
-  revert(buffer);
+  //revert(buffer);
   n = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&clt_addr, addrlen);
   if(n < 0) syserr("can't send to server"); 
   printf("send message...\n");
