@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>IDESourceControlProjectFavoriteDictionaryKey</key>
+	<false/>
+	<key>IDESourceControlProjectIdentifier</key>
+	<string>63506DC7-86F0-4CB4-BB73-B1A16D8113EC</string>
+	<key>IDESourceControlProjectName</key>
+	<string>gbn</string>
+	<key>IDESourceControlProjectOriginsDictionary</key>
+	<dict>
+		<key>C99E90468A2933F446CF2EAB2D982ED545C0B509</key>
+		<string>https://github.com/jtraviesor/go-back-n.git</string>
+	</dict>
+	<key>IDESourceControlProjectPath</key>
+	<string>gbn-xcode/gbn/gbn.xcodeproj</string>
+	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
+	<dict>
+		<key>C99E90468A2933F446CF2EAB2D982ED545C0B509</key>
+		<string>../../../..</string>
+	</dict>
+	<key>IDESourceControlProjectURL</key>
+	<string>https://github.com/jtraviesor/go-back-n.git</string>
+	<key>IDESourceControlProjectVersion</key>
+	<integer>111</integer>
+	<key>IDESourceControlProjectWCCIdentifier</key>
+	<string>C99E90468A2933F446CF2EAB2D982ED545C0B509</string>
+	<key>IDESourceControlProjectWCConfigurations</key>
+	<array>
+		<dict>
+			<key>IDESourceControlRepositoryExtensionIdentifierKey</key>
+			<string>public.vcs.git</string>
+			<key>IDESourceControlWCCIdentifierKey</key>
+			<string>C99E90468A2933F446CF2EAB2D982ED545C0B509</string>
+			<key>IDESourceControlWCCName</key>
+			<string>go-back-n</string>
+		</dict>
+	</array>
+</dict>
+</plist>
