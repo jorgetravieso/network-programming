@@ -18,6 +18,13 @@ int file_size;
 int total_num_of_packets;
 int sq_counter;
 
+int sockfd, portno, n;
+FILE * fp;
+struct hostent* server;
+struct sockaddr_in serv_addr;
+socklen_t addrlen;
+
+
 
 
 
@@ -25,16 +32,12 @@ int sq_counter;
 void read_packets (FILE * fp, CircularBuffer * cb);
 void syserr(char * msg) { perror(msg); exit(-1); }
 unsigned char checksum8(char * buf, int size);
+void send_packets(CircularBuffer * cb);
+void send_packets_from(CircularBuffer * cb, int fromsqno);
 
 int main(int argc, char* argv[])
 {
-  int sockfd, portno, n;
-  FILE * fp;
-  struct hostent* server;
-  struct sockaddr_in serv_addr;
-  socklen_t addrlen;
 
-  char buffer[256];
 
   if(argc != 4) {
     fprintf(stderr, "Usage: %s <hostname> <port> <file_name>\n", argv[0]);
@@ -79,26 +82,55 @@ int main(int argc, char* argv[])
   cb_init(&packets,WINDOWS_SIZE);
   read_packets(fp, &packets);
   printf("%s\n", "We finished reading");
-  cb_print(&packets);
-  // packet_print(packets.elements[98]); 
-  // packet_print(packets.elements[99]);
+  //cb_print(&packets);
+
 
   printf("Size: %d\n", cb_size(&packets)); 
 
+  send_packets(&packets);
+
+  int lastack = 0;
+  int count = 0;
+  while(lastack < total_num_of_packets){
+    if(count ==  1000) break;
+    count++;
+   
+    //cb_print(&packets);
 
 
-  int driver = cb->start;
-  int i = 0;
+    fd_set readset;
+    struct timeval timeout;                    
+    timeout.tv_usec = 10;    /*set the timeout to 10 ms*/
+
+    FD_ZERO(&readset);
+    FD_SET(sockfd, &readset);
+    n = select(sockfd+1, &readset, NULL, NULL, &timeout);
+    if(n < 0) syserr("can't receive from client"); 
+    if (FD_ISSET(sockfd, &readset)){
+      AckPacket ack;
+      n = recvfrom(sockfd, (void*) &ack, sizeof(ack), 0, (struct sockaddr*)&serv_addr, &addrlen); 
+      if(n < 0) syserr("can't receive ack from client"); 
+      printf("We received ack#:%d\n", ack.ack);
+
+      if(ack.ack >= lastack){
+        for(int i = 0; i < (ack.ack - lastack); i++)
+          dequeue(&packets);
+        read_packets(fp,&packets);
+        lastack = ack.ack;
+        send_packets_from(&packets, lastack);
+      }
+    }
+    else{
+      send_packets(&packets);
+    }
+
     
-  while(driver != cb->end){
-    Packet p = cb->elements[driver];
-    driver = (driver + 1) % cb->size;
-    //packet_print(p);
-    n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
-    if(n < 0) syserr("can't send to server");
-    printf("send...\n");
-    i++;   
-  }
+
+
+
+ 
+  
+}
 
 
 
@@ -112,28 +144,27 @@ int main(int argc, char* argv[])
 
 
 
-    
-    
+
 
 
 
 
 
 /*
-  n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr*)&serv_addr, &addrlen);
-  if(n < 0) syserr("can't receive from server");
-  printf("CLIENT RECEIVED MESSAGE: %s\n", buffer);
+n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr*)&serv_addr, &addrlen);
+if(n < 0) syserr("can't receive from server");
+printf("CLIENT RECEIVED MESSAGE: %s\n", buffer);
 
   */
 
-  close(sockfd);
-  return 0;
+close(sockfd);
+return 0;
 }
 
 void read_packets(FILE *fp, CircularBuffer * packets)
 {
 
-  printf("trying to read\n");
+ // printf("trying to read\n");
 
   //char buffer[PAYLOAD_SIZE];
  // int hey = 0; 
@@ -142,8 +173,8 @@ void read_packets(FILE *fp, CircularBuffer * packets)
   while(!is_full(packets))
   {   
     Packet p;
-    printf("trying to read\n");
-    printf("size of payload: %d\n",sizeof(p.payload));
+    //printf("trying to read\n");
+    //printf("size of payload: %d\n",sizeof(p.payload));
     memset(p.payload, 0, sizeof(p.payload));
 
     if(feof( fp )) break;
@@ -156,13 +187,13 @@ void read_packets(FILE *fp, CircularBuffer * packets)
       {
        perror( "Read error" );
        break;
-      }
-      p.sqno = sq_counter++;
-      p.num_of_packets = total_num_of_packets;
-      p.checksum = checksum8((char *) &p, sizeof(p));
+     }
+     p.sqno = sq_counter++;
+     p.num_of_packets = total_num_of_packets;
+     p.checksum = checksum8((char *) &p, sizeof(p));
       //printf("%s\n", "after creating struct");
       //hey++;
-      enqueue(packets,p);
+     enqueue(packets,p);
    }
 
 
@@ -188,27 +219,28 @@ unsigned char checksum8(char * buf, int size)
   return ~sum;
 }
 
+void send_packets(CircularBuffer * packets){
+  send_packets_from(packets, 0);
+}
+
+void send_packets_from(CircularBuffer * packets, int fromsqno){
 
 
+  int driver = packets->start;
+  while(driver != packets->end){
 
-/*
-    int br = 0;
-    if(!fread(p.payload, sizeof(p.payload),1, fp));
-    {
-      printf("%s\n", "before creating struct");
-          //= {sq_counter++,total_num_of_packets,buffer};
-      p.sqno = sq_counter++;
-      p.num_of_packets = total_num_of_packets;
+    Packet p = packets->elements[driver];
+    driver = (driver + 1) % packets->size;
+    if(p.sqno < fromsqno){continue;}
 
-
-    }
-    else
-    {
-      printf("Could not read 1k from file");
-      break;
-    }
-
-*/
+    n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
+    if(n < 0) syserr("can't send to server");
+    //printf("we sent p#:%d:\n", p.sqno);
+    
+    packet_print(p);
+    
+  } 
+}
 
 
 

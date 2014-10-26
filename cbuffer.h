@@ -8,8 +8,13 @@ typedef struct
     int num_of_packets;
     int checksum;
     char payload [PAYLOAD_SIZE];
-    //STATUS status;
 }Packet;
+
+typedef struct
+{	
+	int ack;
+}AckPacket;
+
 
 typedef struct
 {
@@ -27,5 +32,6 @@ int is_empty(CircularBuffer * cb);
 int cb_size(CircularBuffer * cb);
 int enqueue(CircularBuffer * cb, Packet p);
 Packet dequeue(CircularBuffer * cb);
+Packet peek(CircularBuffer * cb);
 void cb_print(CircularBuffer * cb);
 void packet_print(Packet p);

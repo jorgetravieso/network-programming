@@ -10,6 +10,7 @@
 
 #define WINDOWS_SIZE 100
 
+int is_corrupt(Packet p);
 void syserr(char *msg) { perror(msg); exit(-1); }
 unsigned char checksum8(char * buf, int size);
 void write_packet(Packet p, FILE * stream);
@@ -44,24 +45,68 @@ int main(int argc, char *argv[])
 
   // fp = fopen(argv[3], "r");  //open file
   fp = fopen("/Users/jtraviesor/Desktop/test.out", "w");
-  if(!fp){
+  if(!fp)
+  {
     fprintf(stderr, "ERROR: file %s couldn't be opened or created:\n", argv[3]);
     return 3;
   }
 
 
-for(;;) {
+int expected = 0;
 
-  printf("wait on port %d...\n", portno);
+for(;;) 
+{
+
+  Packet p;
+  //printf("wait on port %d...\n", portno);
   addrlen = sizeof(clt_addr); 
 
-  n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr*)&clt_addr, &addrlen); 
+  n = recvfrom(sockfd, (void*) &p, sizeof(p), 0, (struct sockaddr*)&clt_addr, &addrlen); 
   if(n < 0) syserr("can't receive from client"); 
-  else buffer[n] = '\0';
 
   //printf("SERVER GOT MESSAGE: %s from client %s at port %d\n", buffer,
-	inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port)); 
+  printf("%s\n", "received p:");
+ 
 
+  //packet_print(p);
+  printf("SeqNo: %d, #Packets %d, Checksum: %d", p.sqno,p.num_of_packets, p.checksum);
+  char c = 0;
+  int index = 0;
+  printf("%s\n", "Payload: ");
+  while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
+  {
+    fputc(c,stdout);
+  }
+  printf("\n\n");
+
+
+
+
+
+
+
+
+
+
+	inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
+  if(!is_corrupt(p)){
+    printf("%s\n","we received a good packet" );
+    if(p.sqno == expected){
+      expected++;
+      write_packet(p, fp);
+      AckPacket ack;
+      ack.ack = p.sqno;
+      n = sendto(sockfd, (void * )&ack, sizeof(ack), 0, (struct sockaddr*)&clt_addr, addrlen);
+      if(n < 0) syserr("can't send ack to server"); 
+    }
+  }
+
+
+
+
+    packet_print(p);
+
+  
 
   //n = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&clt_addr, addrlen);
   //if(n < 0) syserr("can't send to server"); 
@@ -92,5 +137,20 @@ void write_packet(Packet p, FILE * stream)
     {
        fputc(c,stream);
     }
+}
+
+int is_corrupt(Packet p)
+{
+  int rec_checksum = p.checksum;
+  printf("rec_checksum :%d\n", rec_checksum);
+
+  p.checksum = 0;
+  int new_checksum = checksum8((char *)&p, sizeof(p));
+  printf("new_checksum :%d\n", new_checksum);
+
+  if(new_checksum != rec_checksum){
+    return 1;
+  }
+  return 0;
 }
 

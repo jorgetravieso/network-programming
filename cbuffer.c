@@ -1,7 +1,4 @@
 
-/**
- Rename to packet buffer
- */
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -9,21 +6,11 @@
 #include "cbuffer.h" 
 
 
-
-
-//typedef enum {ACKED, NO_ACKED} STATUS;
-
-
-
 void cb_init(CircularBuffer * cb, int size)
 {
     cb->start = 0;
     cb->end = 0;
     cb->size = size + 1;
-    printf("size of cb:%d \n",cb->size);
-    //memset(cb.elements, 0, sizeof(cb.elements));
-    
-    //cb.elements = calloc(cb.size, sizeof(Packet));
 }
 
 void cb_free(CircularBuffer *cb)
@@ -33,17 +20,7 @@ void cb_free(CircularBuffer *cb)
 
 int is_full(CircularBuffer * cb)
 {
-
-return (cb->end + 1) % cb->size == cb->start;
-/*
-    int diff = cb->end - cb->start;
-    if( diff == -1 || diff == (cb->size - 1))
-        return 1;
-    
-    return 0;
-*/
-
-  
+    return (cb->end + 1) % cb->size == cb->start;
 }
 
 int is_empty(CircularBuffer * cb)
@@ -60,42 +37,44 @@ int cb_size(CircularBuffer * cb)
 
 int enqueue(CircularBuffer * cb, Packet  p)
 {
-    if(is_full(cb)){            //we cannot add more elements
-        printf("%s\n", "Trying to enqueue full");
+    if(is_full(cb)) //we cannot add more elements
+    {           
+        printf("%s\n", "The queue is full");
         return 0;
 
     }
-    printf("size of cb:%d \n",cb->size);
     cb->elements[cb->end] = p;
     cb->end = (cb->end + 1) % cb->size;
     return 1;
 }
 
 Packet dequeue(CircularBuffer * cb){
-    
-    //if (is_empty(cb)) {
-    //    return ;
-    //}
-    //cb.elements[cb.start].status = ACKED;
+
     Packet p =cb->elements[cb->start];
     cb->start = (cb->start + 1) % cb->size;
     return p;
 }
 
-void cb_print(CircularBuffer * cb)
-{
-    int driver = cb->start;
-    int i = 0;
-    
-    while(driver != cb->end){
-        Packet p = cb->elements[driver];
-        driver = (driver + 1) % cb->size;
-        packet_print(p);
-        i++;   
-    }
+Packet peek(CircularBuffer * cb){
+
+    Packet p =cb->elements[cb->start];
+    return p;
 }
 
 
+void cb_print(CircularBuffer * cb)
+{
+    int driver = cb->start;
+    //int i = 0;
+    
+    while(driver != cb->end)
+    {
+        Packet p = cb->elements[driver];
+        driver = (driver + 1) % cb->size;
+        packet_print(p);
+       // i++;   
+    }
+}
 
 void packet_print(Packet p)
 {
@@ -105,7 +84,7 @@ void packet_print(Packet p)
     printf("%s\n", "Payload: ");
     while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
     {
-       fputc(c,stdout);
+     fputc(c,stdout);
     }
     printf("\n\n");
 }
