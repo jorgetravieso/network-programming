@@ -24,6 +24,7 @@ int sq_counter;
 
 void read_packets (FILE * fp, CircularBuffer * cb);
 void syserr(char * msg) { perror(msg); exit(-1); }
+unsigned char checksum8(char * buf, int size);
 
 int main(int argc, char* argv[])
 {
@@ -70,39 +71,62 @@ int main(int argc, char* argv[])
   serv_addr.sin_addr = *((struct in_addr*)server->h_addr);
   serv_addr.sin_port = htons(portno);
 
+  addrlen = sizeof(serv_addr);
+
 
 
   CircularBuffer packets;
   cb_init(&packets,WINDOWS_SIZE);
   read_packets(fp, &packets);
+  printf("%s\n", "We finished reading");
   cb_print(&packets);
+  // packet_print(packets.elements[98]); 
+  // packet_print(packets.elements[99]);
+
+  printf("Size: %d\n", cb_size(&packets)); 
+
+
+
+  int driver = cb->start;
+  int i = 0;
+    
+  while(driver != cb->end){
+    Packet p = cb->elements[driver];
+    driver = (driver + 1) % cb->size;
+    //packet_print(p);
+    n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
+    if(n < 0) syserr("can't send to server");
+    printf("send...\n");
+    i++;   
+  }
 
 
 
 
 
-  /*
+
+
+
+
+
+
+
+
     
     
 
 
-  printf("PLEASE ENTER MESSAGE: ");
-  fgets(buffer, 255, stdin);
-  n = strlen(buffer); if(n>0 && buffer[n-1] == '\n') buffer[n-1] = '\0';
 
-  addrlen = sizeof(serv_addr);
-  n = sendto(sockfd, buffer, strlen(buffer), 0, (struct sockaddr*)&serv_addr, addrlen);
-  if(n < 0) syserr("can't send to server");
-  printf("send...\n");
 
+
+/*
   n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr*)&serv_addr, &addrlen);
   if(n < 0) syserr("can't receive from server");
   printf("CLIENT RECEIVED MESSAGE: %s\n", buffer);
 
-  close(sockfd);
-   
   */
 
+  close(sockfd);
   return 0;
 }
 
@@ -111,8 +135,8 @@ void read_packets(FILE *fp, CircularBuffer * packets)
 
   printf("trying to read\n");
 
-    //char buffer[PAYLOAD_SIZE];
-    int hey = 0; 
+  //char buffer[PAYLOAD_SIZE];
+ // int hey = 0; 
 
 
   while(!is_full(packets))
@@ -135,16 +159,35 @@ void read_packets(FILE *fp, CircularBuffer * packets)
       }
       p.sqno = sq_counter++;
       p.num_of_packets = total_num_of_packets;
-      printf("%s\n", "after creating struct");
-      hey++;
+      p.checksum = checksum8((char *) &p, sizeof(p));
+      //printf("%s\n", "after creating struct");
+      //hey++;
       enqueue(packets,p);
    }
- }
- printf("We read packets: %d\n", hey);
 
+
+
+ }
+
+
+
+  // printf("We read packets: %d\n", hey);
 
 
 }
+
+
+unsigned char checksum8(char * buf, int size)
+{
+  unsigned int sum = 0;
+  for(int i = 0; i < size; i++)
+  {
+    sum += buf[i] & 0xff;
+    sum = (sum >> 8) + (sum & 0xff);
+  }
+  return ~sum;
+}
+
 
 
 

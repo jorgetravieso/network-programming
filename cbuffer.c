@@ -19,7 +19,7 @@ void cb_init(CircularBuffer * cb, int size)
 {
     cb->start = 0;
     cb->end = 0;
-    cb->size = size;
+    cb->size = size + 1;
     printf("size of cb:%d \n",cb->size);
     //memset(cb.elements, 0, sizeof(cb.elements));
     
@@ -34,26 +34,28 @@ void cb_free(CircularBuffer *cb)
 int is_full(CircularBuffer * cb)
 {
 
+return (cb->end + 1) % cb->size == cb->start;
+/*
     int diff = cb->end - cb->start;
-    if( diff == -1 || diff == cb->size - 1)
+    if( diff == -1 || diff == (cb->size - 1))
         return 1;
     
     return 0;
+*/
+
+  
 }
 
 int is_empty(CircularBuffer * cb)
 {
-    if(cb->end == cb->start)
-        return 1;
-
-    return 0;
+    return (cb->end == cb->start);
 }
 
-int size(CircularBuffer * cb)
+int cb_size(CircularBuffer * cb)
 {
     if(cb->end > cb->start)
-        return cb->start - cb->end;
-    return cb->size - cb->start + cb->end;
+        return abs(cb->start - cb->end);
+    return abs(cb->size - cb->start + cb->end);
 }
 
 int enqueue(CircularBuffer * cb, Packet  p)
@@ -84,40 +86,28 @@ void cb_print(CircularBuffer * cb)
 {
     int driver = cb->start;
     int i = 0;
-    /*
-    while(i < cb->size){
+    
+    while(driver != cb->end){
         Packet p = cb->elements[driver];
         driver = (driver + 1) % cb->size;
-        printf("SeqNo: %d, #Packets %d ", p.sqno,p.num_of_packets);
-        char c = 0;
-        int index = 0;
-        printf("%s\n", "Payload: ");
-        while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
-        {
-            fputc(c,stdout);
-        }
-        printf("\n\n");
+        packet_print(p);
         i++;   
     }
-    */
+}
 
-    for(i = 0; i < 100; i++)
+
+
+void packet_print(Packet p)
+{
+    printf("SeqNo: %d, #Packets %d, Checksum: %d", p.sqno,p.num_of_packets, p.checksum);
+    char c = 0;
+    int index = 0;
+    printf("%s\n", "Payload: ");
+    while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
     {
-        Packet p = cb->elements[i];
-        //driver = (driver + 1) % cb->size;
-        printf("SeqNo: %d, #Packets %d ", p.sqno,p.num_of_packets);
-        char c = 0;
-        int index = 0;
-        printf("%s\n", "Payload: ");
-        while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
-        {
-            fputc(c,stdout);
-        }
-        printf("\n\n");
-       // i++;   
+       fputc(c,stdout);
     }
-
-    
+    printf("\n\n");
 }
 
 
