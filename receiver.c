@@ -57,6 +57,10 @@ int expected = 0;
 for(;;) 
 {
 
+
+
+
+
   Packet p;
   //printf("wait on port %d...\n", portno);
   addrlen = sizeof(clt_addr); 
@@ -65,32 +69,17 @@ for(;;)
   if(n < 0) syserr("can't receive from client"); 
 
   //printf("SERVER GOT MESSAGE: %s from client %s at port %d\n", buffer,
-  printf("%s\n", "received p:");
+  //printf("%s\n", "received p:");
  
 
   //packet_print(p);
-  printf("SeqNo: %d, #Packets %d, Checksum: %d", p.sqno,p.num_of_packets, p.checksum);
-  char c = 0;
-  int index = 0;
-  printf("%s\n", "Payload: ");
-  while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
-  {
-    fputc(c,stdout);
-  }
-  printf("\n\n");
-
-
-
-
-
-
-
+  //printf("SeqNo: %d, #Packets %d, Checksum: %d\n", p.sqno,p.num_of_packets, p.checksum);
 
 
 
 	inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
   if(!is_corrupt(p)){
-    printf("%s\n","we received a good packet" );
+    //printf("%s\n","we received a good packet" );
     if(p.sqno == expected){
       expected++;
       write_packet(p, fp);
@@ -98,13 +87,16 @@ for(;;)
       ack.ack = p.sqno;
       n = sendto(sockfd, (void * )&ack, sizeof(ack), 0, (struct sockaddr*)&clt_addr, addrlen);
       if(n < 0) syserr("can't send ack to server"); 
+      printf("we sent ack:%d\n",ack);
     }
   }
 
 
 
 
-    packet_print(p);
+//printf("SeqNo: %d, #Packets %d, Checksum: %d\n", p.sqno,p.num_of_packets, p.checksum);
+
+    //packet_print(p);
 
   
 
@@ -142,11 +134,11 @@ void write_packet(Packet p, FILE * stream)
 int is_corrupt(Packet p)
 {
   int rec_checksum = p.checksum;
-  printf("rec_checksum :%d\n", rec_checksum);
+  //printf("rec_checksum :%d\n", rec_checksum);
 
   p.checksum = 0;
   int new_checksum = checksum8((char *)&p, sizeof(p));
-  printf("new_checksum :%d\n", new_checksum);
+  //printf("new_checksum :%d\n", new_checksum);
 
   if(new_checksum != rec_checksum){
     return 1;

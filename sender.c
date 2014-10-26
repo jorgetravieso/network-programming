@@ -34,6 +34,7 @@ void syserr(char * msg) { perror(msg); exit(-1); }
 unsigned char checksum8(char * buf, int size);
 void send_packets(CircularBuffer * cb);
 void send_packets_from(CircularBuffer * cb, int fromsqno);
+void read_and_send(FILE *fp, CircularBuffer * packets);
 
 int main(int argc, char* argv[])
 {
@@ -81,19 +82,20 @@ int main(int argc, char* argv[])
   CircularBuffer packets;
   cb_init(&packets,WINDOWS_SIZE);
   read_packets(fp, &packets);
-  printf("%s\n", "We finished reading");
+  //printf("%s\n", "We finished reading");
   //cb_print(&packets);
 
 
-  printf("Size: %d\n", cb_size(&packets)); 
+  //printf("Size: %d\n", cb_size(&packets));
+  printf("And is the queue full? %d\n", is_full(&packets)); 
 
   send_packets(&packets);
 
   int lastack = 0;
-  int count = 0;
+  //int count = 0;
   while(lastack < total_num_of_packets){
-    if(count ==  1000) break;
-    count++;
+    //if(count ==  10000) break;
+    //count++;
    
     //cb_print(&packets);
 
@@ -113,14 +115,21 @@ int main(int argc, char* argv[])
       printf("We received ack#:%d\n", ack.ack);
 
       if(ack.ack >= lastack){
-        for(int i = 0; i < (ack.ack - lastack); i++)
-          dequeue(&packets);
-        read_packets(fp,&packets);
+        int i;
+        for(i = lastack; i <= ack.ack; i++){
+          Packet p = peek(&packets);
+          if(p.sqno == i){
+            dequeue(&packets);
+          }  
+        }
+        //read_packets(fp,&packets);
         lastack = ack.ack;
-        send_packets_from(&packets, lastack);
+        read_and_send(fp,&packets);
+        //send_packets_from(&packets, lastack);
       }
     }
     else{
+      //timeout
       send_packets(&packets);
     }
 
@@ -190,6 +199,7 @@ void read_packets(FILE *fp, CircularBuffer * packets)
      }
      p.sqno = sq_counter++;
      p.num_of_packets = total_num_of_packets;
+     p.checksum = 0;
      p.checksum = checksum8((char *) &p, sizeof(p));
       //printf("%s\n", "after creating struct");
       //hey++;
@@ -235,12 +245,60 @@ void send_packets_from(CircularBuffer * packets, int fromsqno){
 
     n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
     if(n < 0) syserr("can't send to server");
-    //printf("we sent p#:%d:\n", p.sqno);
+    printf("we sent p#:%d:\n", p.sqno);
     
-    packet_print(p);
+    //printf("SeqNo: %d, #Packets %d, Checksum: %d\n", p.sqno,p.num_of_packets, p.checksum);
     
   } 
 }
+
+
+
+void read_and_send(FILE *fp, CircularBuffer * packets)
+{
+
+ // printf("trying to read\n");
+
+  //char buffer[PAYLOAD_SIZE];
+ // int hey = 0; 
+
+
+  while(!is_full(packets))
+  {   
+    Packet p;
+    //printf("trying to read\n");
+    //printf("size of payload: %d\n",sizeof(p.payload));
+    memset(p.payload, 0, sizeof(p.payload));
+
+    if(feof( fp )) break;
+    else
+    {
+      /* Attempt to read in 10 bytes: */
+      fread( p.payload, sizeof(p.payload),1, fp);
+      //p.payload[nread] = '\0';
+      if( ferror( fp ) ) 
+      {
+       perror( "Read error" );
+       break;
+     }
+     p.sqno = sq_counter++;
+     p.num_of_packets = total_num_of_packets;
+     p.checksum = 0;
+     p.checksum = checksum8((char *) &p, sizeof(p));
+     enqueue(packets,p);
+     n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
+     if(n < 0) syserr("can't send to server");
+     printf("we sent p#:%d:\n", p.sqno);
+   }
+
+
+
+ }
+
+}
+
+
+
 
 
 

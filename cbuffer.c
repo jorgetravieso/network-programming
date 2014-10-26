@@ -52,6 +52,10 @@ Packet dequeue(CircularBuffer * cb){
 
     Packet p =cb->elements[cb->start];
     cb->start = (cb->start + 1) % cb->size;
+    printf("We removed: ");
+    printf("SeqNo: %d, #Packets %d, Checksum: %d  ", p.sqno,p.num_of_packets, p.checksum);
+    printf("The size is %d ", cb_size(cb));
+    printf("And is_full? %d\n", is_full(cb));
     return p;
 }
 

@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-c -Wall
+CFLAGS=-c -O -Wall
 LDFLAGS=
 
 SRC=sender.c cbuffer.c
