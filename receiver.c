@@ -78,7 +78,7 @@ for(;;)
 
 
 	inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
-  if(!is_corrupt(p)){
+ // if(!is_corrupt(p)){
     //printf("%s\n","we received a good packet" );
     if(p.sqno == expected){
       expected++;
@@ -87,9 +87,13 @@ for(;;)
       ack.ack = p.sqno;
       n = sendto(sockfd, (void * )&ack, sizeof(ack), 0, (struct sockaddr*)&clt_addr, addrlen);
       if(n < 0) syserr("can't send ack to server"); 
-      printf("we sent ack:%d\n",ack);
+      printf("we sent ack:%d\n",ack.ack);
+
     }
-  }
+  //}
+  //else{
+  //  printf("Bad checksum %d\n", p.sqno);
+ // }
 
 
 
@@ -112,6 +116,8 @@ for(;;)
 
 unsigned char checksum8(char * buf, int size)
 {
+  
+
   unsigned int sum = 0;
   for(int i = 0; i < size; i++)
   {

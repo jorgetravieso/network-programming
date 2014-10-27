@@ -31,7 +31,7 @@ int is_full(CircularBuffer * cb);
 int is_empty(CircularBuffer * cb);
 int cb_size(CircularBuffer * cb);
 int enqueue(CircularBuffer * cb, Packet p);
-Packet dequeue(CircularBuffer * cb);
+int dequeue(CircularBuffer * cb, Packet * p);
 Packet peek(CircularBuffer * cb);
 void cb_print(CircularBuffer * cb);
 void packet_print(Packet p);

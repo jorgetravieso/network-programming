@@ -20,7 +20,11 @@ void cb_free(CircularBuffer *cb)
 
 int is_full(CircularBuffer * cb)
 {
-    return (cb->end + 1) % cb->size == cb->start;
+    int diff = cb->end - cb->start;             
+    if( diff == -1 || diff == cb->size - 1)       
+         return 1;
+    return 0;
+   // return (cb->end + 1) % cb->size == cb->start;
 }
 
 int is_empty(CircularBuffer * cb)
@@ -48,15 +52,19 @@ int enqueue(CircularBuffer * cb, Packet  p)
     return 1;
 }
 
-Packet dequeue(CircularBuffer * cb){
+int dequeue(CircularBuffer * cb, Packet * p){
 
-    Packet p =cb->elements[cb->start];
+    if(is_empty(cb)){
+        return 0;
+    }
+
+    p = &cb->elements[cb->start];
     cb->start = (cb->start + 1) % cb->size;
     printf("We removed: ");
-    printf("SeqNo: %d, #Packets %d, Checksum: %d  ", p.sqno,p.num_of_packets, p.checksum);
+    printf("SeqNo: %d, #Packets %d, Checksum: %d  ", p->sqno,p->num_of_packets, p->checksum);
     printf("The size is %d ", cb_size(cb));
     printf("And is_full? %d\n", is_full(cb));
-    return p;
+    return 1;
 }
 
 Packet peek(CircularBuffer * cb){

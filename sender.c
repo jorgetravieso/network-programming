@@ -92,17 +92,19 @@ int main(int argc, char* argv[])
   send_packets(&packets);
 
   int lastack = 0;
+  fd_set readset;
+  struct timeval timeout;                    
+  timeout.tv_usec = 10;    /*set the timeout to 10 ms*/
+
   //int count = 0;
-  while(lastack < total_num_of_packets){
+  while(1){
     //if(count ==  10000) break;
     //count++;
    
     //cb_print(&packets);
 
 
-    fd_set readset;
-    struct timeval timeout;                    
-    timeout.tv_usec = 10;    /*set the timeout to 10 ms*/
+
 
     FD_ZERO(&readset);
     FD_SET(sockfd, &readset);
@@ -119,17 +121,20 @@ int main(int argc, char* argv[])
         for(i = lastack; i <= ack.ack; i++){
           Packet p = peek(&packets);
           if(p.sqno == i){
-            dequeue(&packets);
+            dequeue(&packets,&p);
           }  
         }
         //read_packets(fp,&packets);
         lastack = ack.ack;
         read_and_send(fp,&packets);
         //send_packets_from(&packets, lastack);
+        if(lastack == total_num_of_packets - 1)
+          break;
       }
     }
     else{
       //timeout
+      printf("%s\n", "timeout occurred");
       send_packets(&packets);
     }
 
@@ -203,6 +208,7 @@ void read_packets(FILE *fp, CircularBuffer * packets)
      p.checksum = checksum8((char *) &p, sizeof(p));
       //printf("%s\n", "after creating struct");
       //hey++;
+     packet_print(p);
      enqueue(packets,p);
    }
 
@@ -220,6 +226,8 @@ void read_packets(FILE *fp, CircularBuffer * packets)
 
 unsigned char checksum8(char * buf, int size)
 {
+  
+  
   unsigned int sum = 0;
   for(int i = 0; i < size; i++)
   {
@@ -227,6 +235,7 @@ unsigned char checksum8(char * buf, int size)
     sum = (sum >> 8) + (sum & 0xff);
   }
   return ~sum;
+  
 }
 
 void send_packets(CircularBuffer * packets){
