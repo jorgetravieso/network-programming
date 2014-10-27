@@ -52,6 +52,7 @@ int main(int argc, char *argv[])
   }
 
 
+
 int expected = 0;
 
 for(;;) 
@@ -88,11 +89,26 @@ for(;;)
       n = sendto(sockfd, (void * )&ack, sizeof(ack), 0, (struct sockaddr*)&clt_addr, addrlen);
       if(n < 0) syserr("can't send ack to server"); 
       printf("we sent ack:%d\n",ack.ack);
-
+      if(p.sqno + 1 == p.num_of_packets){
+            fd_set readset;
+            struct timeval timeout;                    
+            timeout.tv_usec = 1000 * 60;    /*set the timeout to 10 ms*/
+            FD_ZERO(&readset);
+            FD_SET(sockfd, &readset);
+            n = select(sockfd+1, &readset, NULL, NULL, &timeout);
+            if(n < 0) syserr("can't receive from client"); 
+            if (FD_ISSET(sockfd, &readset)){
+              continue;
+            }
+            break;
+      }
     }
-  //}
-  //else{
-  //  printf("Bad checksum %d\n", p.sqno);
+
+
+
+ //  }
+ //  else{
+ //    printf("Bad checksum %d\n", p.sqno);
  // }
 
 
@@ -109,7 +125,7 @@ for(;;)
   // printf("send message...\n");
 
 }
-
+  fclose(fp);
   close(sockfd); 
   return 0;
 }
