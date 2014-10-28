@@ -12,7 +12,7 @@
 
 int is_corrupt(Packet p);
 void syserr(char *msg) { perror(msg); exit(-1); }
-unsigned char checksum8(char * buf, int size);
+unsigned char checksum8(unsigned char * buf, int size);
 void write_packet(Packet p, FILE * stream);
 
 
@@ -54,11 +54,12 @@ int main(int argc, char *argv[])
 
 
 int expected = 0;
+int x = 0;
 
 for(;;) 
 {
 
-
+  printf("call #%d\n", ++x);
 
 
 
@@ -79,7 +80,7 @@ for(;;)
 
 
 	inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
- // if(!is_corrupt(p)){
+ if(!is_corrupt(p)){
     //printf("%s\n","we received a good packet" );
     if(p.sqno == expected){
       expected++;
@@ -92,7 +93,7 @@ for(;;)
       if(p.sqno + 1 == p.num_of_packets){
             fd_set readset;
             struct timeval timeout;                    
-            timeout.tv_usec = 1000 * 60;    /*set the timeout to 10 ms*/
+            timeout.tv_sec = 1;    /*set the timeout to 10 ms*/
             FD_ZERO(&readset);
             FD_SET(sockfd, &readset);
             n = select(sockfd+1, &readset, NULL, NULL, &timeout);
@@ -106,10 +107,10 @@ for(;;)
 
 
 
- //  }
- //  else{
- //    printf("Bad checksum %d\n", p.sqno);
- // }
+  }
+  else{
+    printf("Bad checksum %d\n", p.sqno);
+ }
 
 
 
@@ -130,17 +131,18 @@ for(;;)
   return 0;
 }
 
-unsigned char checksum8(char * buf, int size)
+unsigned char checksum8(unsigned char * buf, int size)
 {
   
 
-  unsigned int sum = 0;
+  unsigned char sum = 0;
   for(int i = 0; i < size; i++)
   {
-    sum += buf[i] & 0xff;
-    sum = (sum >> 8) + (sum & 0xff);
+    sum += buf[i];
   }
-  return ~sum;
+  sum = ~sum;
+  sum = sum + 1;
+  return sum;
 }
 
 void write_packet(Packet p, FILE * stream)
@@ -155,14 +157,17 @@ void write_packet(Packet p, FILE * stream)
 
 int is_corrupt(Packet p)
 {
-  int rec_checksum = p.checksum;
+  unsigned char rec_checksum = p.checksum;
   //printf("rec_checksum :%d\n", rec_checksum);
 
   p.checksum = 0;
-  int new_checksum = checksum8((char *)&p, sizeof(p));
+  unsigned char new_checksum = checksum8((unsigned char *)&p, sizeof(p));
   //printf("new_checksum :%d\n", new_checksum);
 
   if(new_checksum != rec_checksum){
+    printf("received %d\n", rec_checksum);
+    printf("received %d\n", new_checksum);
+
     return 1;
   }
   return 0;

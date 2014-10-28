@@ -31,7 +31,7 @@ socklen_t addrlen;
 
 void read_packets (FILE * fp, CircularBuffer * cb);
 void syserr(char * msg) { perror(msg); exit(-1); }
-unsigned char checksum8(char * buf, int size);
+unsigned char checksum8(unsigned char * buf, int size);
 void send_packets(CircularBuffer * cb);
 void send_packets_from(CircularBuffer * cb, int fromsqno);
 void read_and_send(FILE *fp, CircularBuffer * packets);
@@ -205,10 +205,10 @@ void read_packets(FILE *fp, CircularBuffer * packets)
      p.sqno = sq_counter++;
      p.num_of_packets = total_num_of_packets;
      p.checksum = 0;
-     p.checksum = checksum8((char *) &p, sizeof(p));
+     p.checksum = checksum8((unsigned char *) &p, sizeof(p));
       //printf("%s\n", "after creating struct");
       //hey++;
-     packet_print(p);
+     //packet_print(p);
      enqueue(packets,p);
    }
 
@@ -224,17 +224,18 @@ void read_packets(FILE *fp, CircularBuffer * packets)
 }
 
 
-unsigned char checksum8(char * buf, int size)
+unsigned char checksum8(unsigned char * buf, int size)
 {
   
   
-  unsigned int sum = 0;
+  unsigned char sum = 0;
   for(int i = 0; i < size; i++)
   {
-    sum += buf[i] & 0xff;
-    sum = (sum >> 8) + (sum & 0xff);
+    sum += buf[i];
   }
-  return ~sum;
+  sum = ~sum;
+  sum = sum + 1;
+  return sum;
   
 }
 
@@ -249,6 +250,7 @@ void send_packets_from(CircularBuffer * packets, int fromsqno){
   while(driver != packets->end){
 
     Packet p = packets->elements[driver];
+    packet_print(p);
     driver = (driver + 1) % packets->size;
     if(p.sqno < fromsqno){continue;}
 
@@ -293,7 +295,7 @@ void read_and_send(FILE *fp, CircularBuffer * packets)
      p.sqno = sq_counter++;
      p.num_of_packets = total_num_of_packets;
      p.checksum = 0;
-     p.checksum = checksum8((char *) &p, sizeof(p));
+     p.checksum = checksum8((unsigned char *) &p, sizeof(p));
      enqueue(packets,p);
      n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
      if(n < 0) syserr("can't send to server");
