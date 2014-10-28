@@ -53,7 +53,7 @@ int main(int argc, char* argv[])
   }
 
  // fp = fopen(argv[3], "r");  //open file
-  fp = fopen("/Users/jtraviesor/Desktop/test.in", "r");
+  fp = fopen("/Users/jtraviesor/Desktop/test.in", "rb");
   if(!fp){
     fprintf(stderr, "ERROR: file %s couldn't be opened or not found:\n", argv[3]);
     return 3;
@@ -82,28 +82,22 @@ int main(int argc, char* argv[])
   CircularBuffer packets;
   cb_init(&packets,WINDOWS_SIZE);
   read_packets(fp, &packets);
-  //printf("%s\n", "We finished reading");
-  //cb_print(&packets);
 
 
-  //printf("Size: %d\n", cb_size(&packets));
-  printf("And is the queue full? %d\n", is_full(&packets)); 
+
+
 
   send_packets(&packets);
 
   int lastack = 0;
   fd_set readset;
   struct timeval timeout;                    
+  timeout.tv_sec = 0;    
   timeout.tv_usec = 10;    /*set the timeout to 10 ms*/
 
-  //int count = 0;
   while(1){
-    //if(count ==  10000) break;
-    //count++;
-   
-    //cb_print(&packets);
 
-
+    printf("lastack: %d total_num_of_packets: %d \n", lastack, total_num_of_packets);
 
 
     FD_ZERO(&readset);
@@ -135,6 +129,7 @@ int main(int argc, char* argv[])
     else{
       //timeout
       printf("%s\n", "timeout occurred");
+      //cb_print(&packets);
       send_packets(&packets);
     }
 
@@ -142,9 +137,9 @@ int main(int argc, char* argv[])
 
 
 
- 
-  
-}
+
+
+  }
 
 
 
@@ -164,15 +159,8 @@ int main(int argc, char* argv[])
 
 
 
-/*
-n = recvfrom(sockfd, buffer, 255, 0, (struct sockaddr*)&serv_addr, &addrlen);
-if(n < 0) syserr("can't receive from server");
-printf("CLIENT RECEIVED MESSAGE: %s\n", buffer);
-
-  */
-
-close(sockfd);
-return 0;
+  close(sockfd);
+  return 0;
 }
 
 void read_packets(FILE *fp, CircularBuffer * packets)
@@ -208,7 +196,7 @@ void read_packets(FILE *fp, CircularBuffer * packets)
      p.checksum = checksum8((char *) &p, sizeof(p));
       //printf("%s\n", "after creating struct");
       //hey++;
-     packet_print(p);
+     //packet_print(p);
      enqueue(packets,p);
    }
 
@@ -226,8 +214,8 @@ void read_packets(FILE *fp, CircularBuffer * packets)
 
 unsigned char checksum8(char * buf, int size)
 {
-  
-  
+
+
   unsigned int sum = 0;
   for(int i = 0; i < size; i++)
   {
@@ -244,21 +232,39 @@ void send_packets(CircularBuffer * packets){
 
 void send_packets_from(CircularBuffer * packets, int fromsqno){
 
-
+  int i = 0;
   int driver = packets->start;
-  while(driver != packets->end){
+  //int last = (packets->end + 1) / packets->size;
 
+  if(packets->current_size == 1){
+    i++;
     Packet p = packets->elements[driver];
     driver = (driver + 1) % packets->size;
-    if(p.sqno < fromsqno){continue;}
+    //if(p.sqno < fromsqno){continue;}
 
     n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
     if(n < 0) syserr("can't send to server");
     printf("we sent p#:%d:\n", p.sqno);
-    
+
     //printf("SeqNo: %d, #Packets %d, Checksum: %d\n", p.sqno,p.num_of_packets, p.checksum);
-    
-  } 
+
+  }
+  else{
+    while( driver != packets->end ) {
+      i++;
+      Packet p = packets->elements[driver];
+      driver = (driver + 1) % packets->size;
+      if(p.sqno < fromsqno){continue;}
+
+      n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
+      if(n < 0) syserr("can't send to server");
+      printf("we sent p#:%d:\n", p.sqno);
+      
+    //printf("SeqNo: %d, #Packets %d, Checksum: %d\n", p.sqno,p.num_of_packets, p.checksum);
+
+    }
+    printf("We sent %d packets\n", i);
+  }
 }
 
 
@@ -285,24 +291,31 @@ void read_and_send(FILE *fp, CircularBuffer * packets)
       /* Attempt to read in 10 bytes: */
       fread( p.payload, sizeof(p.payload),1, fp);
       //p.payload[nread] = '\0';
-      if( ferror( fp ) ) 
-      {
-       perror( "Read error" );
-       break;
-     }
-     p.sqno = sq_counter++;
-     p.num_of_packets = total_num_of_packets;
-     p.checksum = 0;
-     p.checksum = checksum8((char *) &p, sizeof(p));
-     enqueue(packets,p);
-     n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
-     if(n < 0) syserr("can't send to server");
-     printf("we sent p#:%d:\n", p.sqno);
-   }
+      if( ferror( fp ) ) syserr("can't send to server");
+      p.sqno = sq_counter++;
+      p.num_of_packets = total_num_of_packets;
+      p.checksum = 0;
+      p.checksum = checksum8((char *) &p, sizeof(p));
+      enqueue(packets,p);
+
+   //  if(p.sqno == 201){
+     //packet_print(p);
+
+//    printf("******************************\n");
+
+  //   cb_print(packets);
+
+    // exit(0);
+   //}
+
+      n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
+      if(n < 0) syserr("can't send to server");
+      printf("we sent p#:%d:\n", p.sqno);
+    }
 
 
 
- }
+  }
 
 }
 

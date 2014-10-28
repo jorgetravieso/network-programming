@@ -9,8 +9,8 @@
 void cb_init(CircularBuffer * cb, int size)
 {
     cb->start = 0;
-    cb->end = 0;
-    cb->size = size + 1;
+    cb->end = -1;
+    cb->size = size;
 }
 
 void cb_free(CircularBuffer *cb)
@@ -20,23 +20,21 @@ void cb_free(CircularBuffer *cb)
 
 int is_full(CircularBuffer * cb)
 {
-    int diff = cb->end - cb->start;             
-    if( diff == -1 || diff == cb->size - 1)       
-         return 1;
-    return 0;
-   // return (cb->end + 1) % cb->size == cb->start;
+   // int diff = cb->end - cb->start;             
+   // if( diff == -1 || diff == cb->size - 1)       
+   //      return 1;
+   // return 0;
+   return cb->current_size == cb->size;
 }
 
 int is_empty(CircularBuffer * cb)
 {
-    return (cb->end == cb->start);
+    return (cb->current_size == 0);
 }
 
 int cb_size(CircularBuffer * cb)
 {
-    if(cb->end > cb->start)
-        return abs(cb->start - cb->end);
-    return abs(cb->size - cb->start + cb->end);
+    return cb->current_size;
 }
 
 int enqueue(CircularBuffer * cb, Packet  p)
@@ -47,8 +45,9 @@ int enqueue(CircularBuffer * cb, Packet  p)
         return 0;
 
     }
-    cb->elements[cb->end] = p;
+    cb->current_size++;
     cb->end = (cb->end + 1) % cb->size;
+    cb->elements[cb->end] = p;
     return 1;
 }
 
@@ -57,13 +56,13 @@ int dequeue(CircularBuffer * cb, Packet * p){
     if(is_empty(cb)){
         return 0;
     }
-
+    cb->current_size--;
     p = &cb->elements[cb->start];
     cb->start = (cb->start + 1) % cb->size;
-    printf("We removed: ");
-    printf("SeqNo: %d, #Packets %d, Checksum: %d  ", p->sqno,p->num_of_packets, p->checksum);
-    printf("The size is %d ", cb_size(cb));
-    printf("And is_full? %d\n", is_full(cb));
+   // printf("We removed: ");
+   // printf("SeqNo: %d, #Packets %d, Checksum: %d  ", p->sqno,p->num_of_packets, p->checksum);
+   // printf("The size is %d ", cb_size(cb));
+   // printf("And is_full? %d\n", is_full(cb));
     return 1;
 }
 

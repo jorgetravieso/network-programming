@@ -22,6 +22,7 @@ typedef struct
     int end;
     int size;
     Packet elements[WINDOWS_SIZE];
+    int current_size;
 }CircularBuffer;
 
 
