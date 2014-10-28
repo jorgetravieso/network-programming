@@ -7,6 +7,7 @@ typedef struct
     int sqno;
     int num_of_packets;
     int checksum;
+    int payload_size;
     char payload [PAYLOAD_SIZE];
 }Packet;
 

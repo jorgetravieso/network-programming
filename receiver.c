@@ -132,12 +132,20 @@ unsigned char checksum8(char * buf, int size)
 
 void write_packet(Packet p, FILE * stream)
 {
-  char c = 0;
-  int index = 0;
+ /// char c = 0;
+ // int index = 0;
+  printf("remaining %d\n", p.payload_size);
+
+  //if(p.payload_size <= 0) printf("%s\n", "Negative shit");
+  fwrite(p.payload,p.payload_size, 1,stream);
+
+  /*
+
   while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
   {
    fputc(c,stream);
  }
+ */
 }
 
 int is_corrupt(Packet p)
