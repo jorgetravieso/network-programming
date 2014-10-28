@@ -15,7 +15,7 @@ EXEC2=receiver
 all: $(SRC) $(EXEC) $(EXEC2)
 	
 $(EXEC): $(OBJ) 
-		$(CC) $(LDFLAGS) $(OBJ) -o $@
+		$(CC) $(LDFLAGS) $(OBJ) -o $@ -lm
 
 $(EXEC2): $(OBJ2) 
 		$(CC) $(LDFLAGS) $(OBJ2) -o $@

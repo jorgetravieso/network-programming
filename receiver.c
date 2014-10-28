@@ -43,8 +43,8 @@ int main(int argc, char *argv[])
     syserr("can't bind");
   printf("bind socket to port %d...\n", portno);
 
-  // fp = fopen(argv[3], "r");  //open file
-  fp = fopen("/Users/jtraviesor/Desktop/test.out", "wb");
+  fp = fopen(argv[2], "wb");  //open file
+  //fp = fopen("/Users/jtraviesor/Desktop/test.out", "wb");
   if(!fp)
   {
     fprintf(stderr, "ERROR: file %s couldn't be opened or created:\n", argv[3]);
@@ -122,7 +122,8 @@ unsigned char checksum8(char * buf, int size)
 
 
   unsigned int sum = 0;
-  for(int i = 0; i < size; i++)
+  int i;
+  for(i = 0; i < size; i++)
   {
     sum += buf[i] & 0xff;
     sum = (sum >> 8) + (sum & 0xff);

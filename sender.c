@@ -1,3 +1,5 @@
+//sudo mn --link tc,loss=10
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -7,7 +9,6 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <math.h>
-//#define READ_ONLY = "r";
 
 #define WINDOWS_SIZE 100
 #include "cbuffer.h"
@@ -49,8 +50,8 @@ int main(int argc, char* argv[])
     return 2;
   }
 
- // fp = fopen(argv[3], "r");  //open file
-  fp = fopen("/Users/jtraviesor/Desktop/test.in", "rb");
+  fp = fopen(argv[3], "rb");  //open file
+ // fp = fopen("/Users/jtraviesor/Desktop/test.in", "rb");
   if(!fp){
     fprintf(stderr, "ERROR: file %s couldn't be opened or not found:\n", argv[3]);
     return 3;
@@ -189,7 +190,8 @@ unsigned char checksum8(char * buf, int size)
 
 
   unsigned int sum = 0;
-  for(int i = 0; i < size; i++)
+  int i;
+  for(i = 0; i < size; i++)
   {
     sum += buf[i] & 0xff;
     sum = (sum >> 8) + (sum & 0xff);
