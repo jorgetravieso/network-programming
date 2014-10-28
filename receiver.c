@@ -71,10 +71,8 @@ int main(int argc, char *argv[])
 
 
     inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
-    if(!is_corrupt(p)){
+    if(p.sqno == expected && !is_corrupt(p)){
       //printf("We received good sqno:%d and we are waiting for: %d\n", p.sqno, expected);
-
-      if(p.sqno == expected){
         expected++;
         write_packet(p, fp);
         AckPacket ack;
@@ -83,7 +81,7 @@ int main(int argc, char *argv[])
         if(n < 0) syserr("can't send ack to server"); 
        // printf("we sent ack:%d\n",ack.ack);
         if(p.sqno + 1 == p.num_of_packets){
-          //printf("%s\n","We got the last" );
+         // printf("%s\n","We got the last" );
           fd_set readset;
           struct timeval timeout;                    
           timeout.tv_sec = 60;    /*set the timeout to 10 ms*/
@@ -97,21 +95,23 @@ int main(int argc, char *argv[])
           }
          
         }
-      }else{
-        if(expected == p.num_of_packets){
-          break;
-        }
+      }//else{
+      if(expected == p.num_of_packets){
+        break;
       }
+      
 
 
 
 
-    }
-    else{
-      printf("Bad checksum %d\n", p.sqno);
-    }
+    
+   // else{
+   //   printf("Bad checksum %d\n", p.sqno);
+   // }
 
   }
+
+
   fclose(fp);
   close(sockfd); 
   return 0;
