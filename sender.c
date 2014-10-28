@@ -106,7 +106,7 @@ int main(int argc, char* argv[])
       AckPacket ack;
       n = recvfrom(sockfd, (void*) &ack, sizeof(ack), 0, (struct sockaddr*)&serv_addr, &addrlen); 
       if(n < 0) syserr("can't receive ack from client"); 
-      printf("We received ack#:%d\n", ack.ack);
+      //printf("We received ack#:%d\n", ack.ack);
 
       if(ack.ack >= lastack){
         int i;
@@ -207,30 +207,25 @@ void send_packets_from(CircularBuffer * packets, int fromsqno){
   int i = 0;
   int driver = packets->start;
 
-  if(packets->current_size == 1){
+  while( driver != packets->end ) {
     i++;
     Packet p = packets->elements[driver];
     driver = (driver + 1) % packets->size;
+    if(p.sqno < fromsqno){continue;}
+
     n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
     if(n < 0) syserr("can't send to server");
-    printf("we sent p#:%d:\n", p.sqno);
+ //   printf("we sent p#:%d:\n", p.sqno);
 
   }
-  else{
-    while( driver != packets->end ) {
-      i++;
-      Packet p = packets->elements[driver];
-      driver = (driver + 1) % packets->size;
-      if(p.sqno < fromsqno){continue;}
-
-      n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
-      if(n < 0) syserr("can't send to server");
-      printf("we sent p#:%d:\n", p.sqno);
-
-    }
-    
-  }
-  printf("We sent %d packets\n", i);
+  //get the last
+  i++;
+  Packet p = packets->elements[driver];
+  driver = (driver + 1) % packets->size;
+  n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
+  if(n < 0) syserr("can't send to server");
+//  printf("we sent p#:%d:\n", p.sqno);
+//  printf("We sent %d packets\n", i);
 
 }
 
@@ -262,7 +257,7 @@ void read_and_send(FILE *fp, CircularBuffer * packets)
 
       n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
       if(n < 0) syserr("can't send to server");
-      printf("we sent p#:%d:\n", p.sqno);
+     // printf("we sent p#:%d:\n", p.sqno);
     }
 
 

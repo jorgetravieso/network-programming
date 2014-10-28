@@ -72,7 +72,7 @@ int main(int argc, char *argv[])
 
     inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
     if(!is_corrupt(p)){
-      printf("We received good sqno:%d and we are waiting for: %d\n", p.sqno, expected);
+      //printf("We received good sqno:%d and we are waiting for: %d\n", p.sqno, expected);
 
       if(p.sqno == expected){
         expected++;
@@ -81,9 +81,9 @@ int main(int argc, char *argv[])
         ack.ack = p.sqno;
         n = sendto(sockfd, (void * )&ack, sizeof(ack), 0, (struct sockaddr*)&clt_addr, addrlen);
         if(n < 0) syserr("can't send ack to server"); 
-        printf("we sent ack:%d\n",ack.ack);
+       // printf("we sent ack:%d\n",ack.ack);
         if(p.sqno + 1 == p.num_of_packets){
-          printf("%s\n","We got the last" );
+          //printf("%s\n","We got the last" );
           fd_set readset;
           struct timeval timeout;                    
           timeout.tv_sec = 60;    /*set the timeout to 10 ms*/
@@ -134,7 +134,7 @@ void write_packet(Packet p, FILE * stream)
 {
  /// char c = 0;
  // int index = 0;
-  printf("remaining %d\n", p.payload_size);
+  //printf("remaining %d\n", p.payload_size);
 
   //if(p.payload_size <= 0) printf("%s\n", "Negative shit");
   fwrite(p.payload,p.payload_size, 1,stream);
