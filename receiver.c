@@ -6,6 +6,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <time.h>
 #include "cbuffer.h"
 
 #define WINDOWS_SIZE 100                                             //windows size of the the GBN
@@ -17,6 +18,8 @@ void syserr(char *msg) { perror(msg); exit(-1); }                    //exist the
 unsigned char checksum8(char * buf, int size);                       //checksum 8 algorithm
 void write_packet(Packet p, FILE * stream);                          //write the packet content to a stream
 void clear_file(FILE * fp){fwrite("",0, 1,fp);}
+long timediff(clock_t t1, clock_t t2);
+ long num_of_bytes;
 
 int main(int argc, char *argv[])
 {
@@ -24,6 +27,9 @@ int main(int argc, char *argv[])
   FILE * fp;                                    //output file
   struct sockaddr_in serv_addr, clt_addr; 
   socklen_t addrlen;
+  long elapsed = 0;
+  num_of_bytes = 0;
+  clock_t t1, t2;
 
   //input validation
   if(argc != 3) { 
@@ -54,9 +60,10 @@ int main(int argc, char *argv[])
 
   fd_set readset;
   struct timeval timeout;                    
-  timeout.tv_sec = 60;    /*set the timeout to 60s to wait after the last ack*/
+  timeout.tv_sec = 10;    /*set the timeout to 60s to wait after the last ack*/
   timeout.tv_usec = 0;
   int expected = 0;       //expected sqno
+  int time_flag1 = 0, time_flag2 = 0;
   
   for(;;) 
   {
@@ -66,6 +73,10 @@ int main(int argc, char *argv[])
 
     n = recvfrom(sockfd, (void*) &p, sizeof(p), 0, (struct sockaddr*)&clt_addr, &addrlen); 
     if(n < 0) syserr("can't receive from client"); 
+    if(!time_flag1) {
+        t1 = clock();
+        time_flag1 = 1;
+    }
     inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
     if(p.sqno == expected && !is_corrupt(p)){        //if it is the packet we expected and is not corrupt
 
@@ -78,6 +89,10 @@ int main(int argc, char *argv[])
       if(n < 0) syserr("can't send ack to server"); 
     }
     if(p.sqno + 1 == p.num_of_packets || p.num_of_packets == 0){               //if we are on the last packet
+       if(!time_flag2) {
+          t2 = clock();
+          time_flag2 = 1;
+       }
        if(LOGGING_MODE) printf("%s\n","the last packet was received" );
         FD_ZERO(&readset);
         FD_SET(sockfd, &readset);                     //do select() with timeout = 60s
@@ -95,6 +110,15 @@ int main(int argc, char *argv[])
 
     }
   }
+
+  
+  elapsed = timediff(t1, t2);
+  long throughput = (num_of_bytes * 8)/(elapsed/1000.0);
+  printf("elapsed: %ld ms\n", elapsed);
+  if(num_of_bytes == 0){
+      printf("throughput: %d \n", 0);
+  }
+  else printf("throughput: %ld \n", throughput);
 
   printf("the file has been successfully transfered\n");
 
@@ -119,6 +143,7 @@ unsigned char checksum8(char * buf, int size)
 
 void write_packet(Packet p, FILE * stream)
 {
+  num_of_bytes += p.payload_size;
   fwrite(p.payload,p.payload_size, 1,stream);
 }
 
@@ -135,5 +160,11 @@ int is_corrupt(Packet p)
   }
   return 0;
 
+}
+
+long timediff(clock_t t1, clock_t t2) {
+    long elapsed;
+    elapsed = ((double)t2 - t1) / CLOCKS_PER_SEC * 1000;
+    return elapsed;
 }
 

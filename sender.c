@@ -114,7 +114,8 @@ int main(int argc, char* argv[])
         if(lastack == total_num_of_packets - 1)          //if we received the last ack we break 
           break;
       }
-      if(ack.ack == -1){                                  //if the last ack was not received the receiver will keep sending -1
+      uint16_t temp = -1;
+      if(ack.ack == temp){                                  //if the last ack was not received the receiver will keep sending -1
         break;  
       }
     }
