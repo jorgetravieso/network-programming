@@ -102,12 +102,12 @@ int main(int argc, char* argv[])
     FD_ZERO(&readset);
     FD_SET(sockfd, &readset);
     n = select(sockfd+1, &readset, NULL, NULL, &timeout);
-    if(n < 0) syserr("can't receive from client"); 
+    if(n < 0) syserr("error on select()"); 
     if (FD_ISSET(sockfd, &readset)){
       AckPacket ack;
       n = recvfrom(sockfd, (void*) &ack, sizeof(ack), 0, (struct sockaddr*)&serv_addr, &addrlen); 
       if(n < 0) syserr("can't receive ack from client"); 
-      //printf("We received ack#:%d\n", ack.ack);
+      printf("We received ack#:%d\n", ack.ack);
 
       if(ack.ack >= lastack){
         int i;
@@ -124,7 +124,7 @@ int main(int argc, char* argv[])
       }
     }
     else{
-     // printf("%s\n", "timeout occurred");
+      printf("%s\n", "*** timeout occurred ** ");
       send_packets(&packets);
     }
 
@@ -179,7 +179,7 @@ void read_packets(FILE *fp, CircularBuffer * packets)
 
 
 
-  // printf("We read packets: %d\n", hey);
+ 
 
 
 }
@@ -217,7 +217,7 @@ void send_packets_from(CircularBuffer * packets, int fromsqno){
 
     n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
     if(n < 0) syserr("can't send to server");
- //   printf("we sent p#:%d:\n", p.sqno);
+    printf("sent packet #:%d:\n", p.sqno);
 
   }
   //get the last
@@ -226,8 +226,8 @@ void send_packets_from(CircularBuffer * packets, int fromsqno){
   driver = (driver + 1) % packets->size;
   n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
   if(n < 0) syserr("can't send to server");
-//  printf("we sent p#:%d:\n", p.sqno);
-//  printf("We sent %d packets\n", i);
+  printf("sent packet #:%d:\n", p.sqno);
+  //  printf("sent %d packets\n", i);
 
 }
 
@@ -259,7 +259,7 @@ void read_and_send(FILE *fp, CircularBuffer * packets)
 
       n = sendto(sockfd, (void *) &p, sizeof(p), 0, (struct sockaddr*)&serv_addr, addrlen);
       if(n < 0) syserr("can't send to server");
-     // printf("we sent p#:%d:\n", p.sqno);
+      printf("sent packet #:%d:\n", p.sqno);
     }
 
 

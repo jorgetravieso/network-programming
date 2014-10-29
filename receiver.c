@@ -10,6 +10,7 @@
 
 #define WINDOWS_SIZE 100
 
+
 int is_corrupt(Packet p);
 void syserr(char *msg) { perror(msg); exit(-1); }
 unsigned char checksum8(char * buf, int size);
@@ -50,64 +51,48 @@ int main(int argc, char *argv[])
     fprintf(stderr, "ERROR: file %s couldn't be opened or created:\n", argv[3]);
     return 3;
   }
-
-
-
   int expected = 0;
-
+  
   for(;;) 
   {
 
-
-
-
-
     Packet p;
-  //printf("wait on port %d...\n", portno);
     addrlen = sizeof(clt_addr); 
 
     n = recvfrom(sockfd, (void*) &p, sizeof(p), 0, (struct sockaddr*)&clt_addr, &addrlen); 
     if(n < 0) syserr("can't receive from client"); 
-
-
     inet_ntoa(clt_addr.sin_addr), ntohs(clt_addr.sin_port); 
     if(p.sqno == expected && !is_corrupt(p)){
-      //printf("We received good sqno:%d and we are waiting for: %d\n", p.sqno, expected);
-        expected++;
-        write_packet(p, fp);
-        AckPacket ack;
-        ack.ack = p.sqno;
-        n = sendto(sockfd, (void * )&ack, sizeof(ack), 0, (struct sockaddr*)&clt_addr, addrlen);
-        if(n < 0) syserr("can't send ack to server"); 
-       // printf("we sent ack:%d\n",ack.ack);
-        if(p.sqno + 1 == p.num_of_packets){
-         // printf("%s\n","We got the last" );
-          fd_set readset;
-          struct timeval timeout;                    
+
+      printf("processing packet #:%d\n", p.sqno);
+      expected++;
+      write_packet(p, fp);
+      AckPacket ack;
+      ack.ack = p.sqno;
+      n = sendto(sockfd, (void * )&ack, sizeof(ack), 0, (struct sockaddr*)&clt_addr, addrlen);
+      if(n < 0) syserr("can't send ack to server"); 
+      if(p.sqno + 1 == p.num_of_packets){
+        printf("%s\n","the last packet was received" );
+        fd_set readset;
+        struct timeval timeout;                    
           timeout.tv_sec = 60;    /*set the timeout to 10 ms*/
-          timeout.tv_usec = 0;
-          FD_ZERO(&readset);
-          FD_SET(sockfd, &readset);
-          n = select(sockfd+1, &readset, NULL, NULL, &timeout);
-          if(n < 0) syserr("can't receive from client"); 
-          if (!FD_ISSET(sockfd, &readset)){
-            break;
-          }
-         
+        timeout.tv_usec = 0;
+        FD_ZERO(&readset);
+        FD_SET(sockfd, &readset);
+        n = select(sockfd+1, &readset, NULL, NULL, &timeout);
+        if(n < 0) syserr("can't receive from client"); 
+        if (!FD_ISSET(sockfd, &readset)){
+          break;
         }
-      }//else{
-      if(expected == p.num_of_packets){
-        break;
+
       }
-      
+    }
+    if(expected == p.num_of_packets){
+        //we are on the las packet
+      break;
+    }
 
 
-
-
-    
-   // else{
-   //   printf("Bad checksum %d\n", p.sqno);
-   // }
 
   }
 
@@ -119,7 +104,6 @@ int main(int argc, char *argv[])
 
 unsigned char checksum8(char * buf, int size)
 {
-
 
   unsigned int sum = 0;
   int i;
@@ -133,30 +117,14 @@ unsigned char checksum8(char * buf, int size)
 
 void write_packet(Packet p, FILE * stream)
 {
- /// char c = 0;
- // int index = 0;
-  //printf("remaining %d\n", p.payload_size);
-
-  //if(p.payload_size <= 0) printf("%s\n", "Negative shit");
   fwrite(p.payload,p.payload_size, 1,stream);
-
-  /*
-
-  while(index < PAYLOAD_SIZE && (c = p.payload[index++])!= 0)
-  {
-   fputc(c,stream);
- }
- */
 }
 
 int is_corrupt(Packet p)
 {
   int rec_checksum = p.checksum;
-  //printf("rec_checksum :%d\n", rec_checksum);
-
   p.checksum = 0;
   int new_checksum = checksum8((char *)&p, sizeof(p));
-  //printf("new_checksum :%d\n", new_checksum);
 
   if(new_checksum != rec_checksum){
     return 1;
