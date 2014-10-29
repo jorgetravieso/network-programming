@@ -4,16 +4,16 @@
 
 typedef struct
 {
-    int sqno;
-    int num_of_packets;
-    int checksum;
-    int payload_size;
+    uint16_t sqno;
+    uint16_t num_of_packets;
+    uint16_t checksum;
+    uint16_t payload_size;
     char payload [PAYLOAD_SIZE];
 }Packet;
 
 typedef struct
 {	
-	int ack;
+	uint16_t ack;
 }AckPacket;
 
 

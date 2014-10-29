@@ -11,6 +11,7 @@ void cb_init(CircularBuffer * cb, int size)
     cb->start = 0;
     cb->end = -1;
     cb->size = size;
+    cb->current_size = 0;
 }
 
 void cb_free(CircularBuffer *cb)
@@ -20,10 +21,6 @@ void cb_free(CircularBuffer *cb)
 
 int is_full(CircularBuffer * cb)
 {
-   // int diff = cb->end - cb->start;             
-   // if( diff == -1 || diff == cb->size - 1)       
-   //      return 1;
-   // return 0;
    return cb->current_size == cb->size;
 }
 
