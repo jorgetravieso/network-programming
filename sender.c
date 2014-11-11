@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <math.h>
+#include <stdint.h>
 #include "cbuffer.h"                                            //circular buffer/queue ds + typedef of packets
 
 #define WINDOWS_SIZE 100                                        //windows size of the the GBN

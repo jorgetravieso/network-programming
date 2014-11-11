@@ -7,6 +7,7 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <stdint.h>
 #include "cbuffer.h"
 
 #define WINDOWS_SIZE 100                                             //windows size of the the GBN
@@ -60,7 +61,7 @@ int main(int argc, char *argv[])
 
   fd_set readset;
   struct timeval timeout;                    
-  timeout.tv_sec = 10;    /*set the timeout to 60s to wait after the last ack*/
+  timeout.tv_sec = 60;    /*set the timeout to 60s to wait after the last ack*/
   timeout.tv_usec = 0;
   int expected = 0;       //expected sqno
   int time_flag1 = 0, time_flag2 = 0;
